@@ -75,12 +75,10 @@ class DesktopSettingPage extends StatefulWidget {
         bind.mainGetBuildinOption(key: kOptionHideNetworkSetting) != 'Y')
       SettingsTabKey.network,
     if (!bind.isIncomingOnly()) SettingsTabKey.display,
-//     if (!bind.isDisableAccount()) SettingsTabKey.account,
     if (isWindows &&
         !bind.isDisableSettings() &&
         bind.mainGetBuildinOption(key: kOptionHideRemotePrinterSetting) != 'Y')
       SettingsTabKey.printer,
-//     SettingsTabKey.about,
   ];
 
   DesktopSettingPage({Key? key, required this.initialTabkey}) : super(key: key);
@@ -1925,12 +1923,6 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-//               if (!hideServer)
-//                 listTile(
-//                   icon: Icons.dns_outlined,
-//                   title: 'ID/Relay Server',
-//                   onTap: () => showServerSettings(gFFI.dialogManager, setState),
-//                 ),
               if (!hideProxy && !hideServer) divider,
               if (!hideProxy)
                 listTile(

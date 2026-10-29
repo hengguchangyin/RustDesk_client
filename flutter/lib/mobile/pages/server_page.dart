@@ -351,25 +351,6 @@ class ScamWarningDialogState extends State<ScamWarningDialog> {
                     width: 180,
                   ),
                 ),
-                SizedBox(height: 18),
-                Text(
-                  translate("scam_title"),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22.0,
-                  ),
-                ),
-                SizedBox(height: 18),
-//                 Text(
-//                   "${translate("scam_text1")}\n\n${translate("scam_text2")}\n",
-//                   style: TextStyle(
-//                     color: Colors.white,
-//                     fontWeight: FontWeight.bold,
-//                     fontSize: 16.0,
-//                   ),
-//                 ),
                 Row(
                   children: <Widget>[
                     Checkbox(
