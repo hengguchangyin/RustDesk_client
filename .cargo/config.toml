@@ -1,5 +1,11 @@
 [target.x86_64-pc-windows-msvc]
-rustflags = ["-Ctarget-feature=+crt-static"]
+rustflags = [
+    "-C", "target-feature=+crt-static",
+    "-C", "link-args=/NODEFAULTLIB:MSVCRT",
+    "-L", "C:\\Users\\lu\\Desktop\\vcpkg\\installed\\x64-windows-static\\lib",
+    "-l", "zs",
+    "-l", "legacy_stdio_definitions"
+]
 [target.i686-pc-windows-msvc]
 rustflags = ["-C", "target-feature=+crt-static", "-C", "link-args=/NODEFAULTLIB:MSVCRT"]
 [target.aarch64-pc-windows-msvc]
