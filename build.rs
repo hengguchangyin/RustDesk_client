@@ -11,6 +11,14 @@ fn build_windows() {
     println!("cargo:rustc-link-lib=WtsApi32");
     println!("cargo:rerun-if-changed={}", file);
     println!("cargo:rerun-if-changed={}", file2);
+println!("cargo:rustc-link-search=native=C:/WindowsKitsLib/x64");
+println!("cargo:rustc-link-lib=mfplat");
+println!("cargo:rustc-link-lib=mf");
+println!("cargo:rustc-link-lib=mfuuid");
+println!("cargo:rustc-link-lib=mfplay");
+println!("cargo:rustc-link-lib=ole32");
+println!("cargo:rustc-link-lib=strmiids");
+println!("cargo:rustc-link-arg=/NODEFAULTLIB:MSVCRT");
 }
 
 #[cfg(target_os = "macos")]
