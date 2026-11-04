@@ -155,7 +155,7 @@ class _InstallPageBodyState extends State<_InstallPageBody>
   @override
   Widget build(BuildContext context) {
     final double em = 13;
-    final isDarkTheme = MyTheme.currentThemeMode() == ThemeMode.dark;
+//     final isDarkTheme = MyTheme.currentThemeMode() == ThemeMode.dark;
     return Scaffold(
         backgroundColor: null,
         body: SingleChildScrollView(
@@ -192,45 +192,45 @@ class _InstallPageBodyState extends State<_InstallPageBody>
               Option(desktopicon, label: 'Create desktop icon')
                   .marginOnly(bottom: 7),
               Option(printer, label: 'Install {$appName} Printer'),
-              Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDarkTheme
-                        ? Color.fromARGB(135, 87, 87, 90)
-                        : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline_rounded, size: 32)
-                          .marginOnly(right: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(translate('agreement_tip'))
-                              .marginOnly(bottom: em),
-                          InkWell(
-                            hoverColor: Colors.transparent,
-                            onTap: () => launchUrlString(
-                                'https://rustdesk.com/privacy.html'),
-                            child: Tooltip(
-                              message: 'https://rustdesk.com/privacy.html',
-                              child: Row(children: [
-                                Icon(Icons.launch_outlined, size: 16)
-                                    .marginOnly(right: 5),
-                                Text(
-                                  translate('End-user license agreement'),
-                                  style: const TextStyle(
-                                      decoration: TextDecoration.underline),
-                                )
-                              ]),
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
-                  )).marginSymmetric(vertical: 2 * em),
+//               Container(
+//                   padding: EdgeInsets.all(12),
+//                   decoration: BoxDecoration(
+//                     color: isDarkTheme
+//                         ? Color.fromARGB(135, 87, 87, 90)
+//                         : Colors.grey[100],
+//                     borderRadius: BorderRadius.circular(8),
+//                     border: Border.all(color: Colors.grey),
+//                   ),
+//                   child: Row(
+//                     children: [
+//                       Icon(Icons.info_outline_rounded, size: 32)
+//                           .marginOnly(right: 16),
+//                       Column(
+//                         crossAxisAlignment: CrossAxisAlignment.start,
+//                         children: [
+//                           Text(translate('agreement_tip'))
+//                               .marginOnly(bottom: em),
+//                           InkWell(
+//                             hoverColor: Colors.transparent,
+//                             onTap: () => launchUrlString(
+//                                 'https://rustdesk.com/privacy.html'),
+//                             child: Tooltip(
+//                               message: 'https://rustdesk.com/privacy.html',
+//                               child: Row(children: [
+//                                 Icon(Icons.launch_outlined, size: 16)
+//                                     .marginOnly(right: 5),
+//                                 Text(
+//                                   translate('End-user license agreement'),
+//                                   style: const TextStyle(
+//                                       decoration: TextDecoration.underline),
+//                                 )
+//                               ]),
+//                             ),
+//                           ),
+//                         ],
+//                       )
+//                     ],
+//                   )).marginSymmetric(vertical: 2 * em),
               Row(
                 children: [
                   Expanded(
