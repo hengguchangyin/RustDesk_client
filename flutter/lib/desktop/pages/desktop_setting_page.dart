@@ -417,7 +417,7 @@ class _GeneralState extends State<_General> {
       children: [
         if (!isWeb) service(),
         theme(),
-        _Card(title: 'Language', children: [language()]),
+//         _Card(title: 'Language', children: [language()]),
         if (!isWeb) hwcodec(),
         if (!isWeb) audio(context),
         if (!isWeb) record(context),
@@ -524,8 +524,8 @@ class _GeneralState extends State<_General> {
   Widget other() {
     final incomingOnly = bind.isIncomingOnly();
     final outgoingOnly = bind.isOutgoingOnly();
-    final showAutoUpdate = (isWindows && bind.mainIsInstalled()) ||
-    (isMacOS && bind.mainIsInstalled() && bind.mainIsInstalledDaemon(prompt: false) && !bind.isCustomClient());
+//     final showAutoUpdate = (isWindows && bind.mainIsInstalled()) ||
+//     (isMacOS && bind.mainIsInstalled() && bind.mainIsInstalledDaemon(prompt: false) && !bind.isCustomClient());
     final children = <Widget>[
       if (!isWeb && !incomingOnly)
         _OptionCheckBox(context, 'Confirm before closing multiple tabs',
@@ -600,13 +600,13 @@ class _GeneralState extends State<_General> {
           kOptionEnableCheckUpdate,
           isServer: false,
         ),
-      if (showAutoUpdate)
-        _OptionCheckBox(
-          context,
-          'Auto update',
-          kOptionAllowAutoUpdate,
-          isServer: true,
-        ),
+//       if (showAutoUpdate)
+//         _OptionCheckBox(
+//           context,
+//           'Auto update',
+//           kOptionAllowAutoUpdate,
+//           isServer: true,
+//         ),
       if (isWindows && !outgoingOnly)
         _OptionCheckBox(
           context,
@@ -1943,7 +1943,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 switchWidget(
                     Icons.web_asset_outlined,
                     'Use WebSocket',
-                    '${translate('websocket_tip')}\n\n${translate('server-oss-not-support-tip')}',
+                    translate('websocket_tip'),
                     kOptionAllowWebSocket),
               if (!isWeb)
                 futureBuilder(
@@ -1968,7 +1968,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                               title: 'Disable UDP',
                               showTooltip: true,
                               tooltipMessage:
-                                  '${translate('disable-udp-tip')}\n\n${translate('server-oss-not-support-tip')}',
+                                  translate('disable-udp-tip'),
                               trailing: Switch(
                                 value: bind.mainGetOptionSync(
                                         key: kOptionDisableUdp) ==

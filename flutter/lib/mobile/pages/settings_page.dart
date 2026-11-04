@@ -897,12 +897,12 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
                       });
                     },
             ),
-          SettingsTile(
-              title: Text(translate('Language')),
-              leading: Icon(Icons.translate),
-              onPressed: (context) {
-                showLanguageSettings(gFFI.dialogManager);
-              }),
+//           SettingsTile(
+//               title: Text(translate('Language')),
+//               leading: Icon(Icons.translate),
+//               onPressed: (context) {
+//                 showLanguageSettings(gFFI.dialogManager);
+//               }),
           SettingsTile(
             title: Text(translate(
                 Theme.of(context).brightness == Brightness.light
