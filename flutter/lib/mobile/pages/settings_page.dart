@@ -934,23 +934,23 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
               },
             ),
           if (!bind.isDisableAccount())
-            SettingsTile.switchTile(
-              title: Text(translate('note-at-conn-end-tip')),
-              initialValue: _allowAskForNoteAtEndOfConnection,
-              onToggle: (v) async {
-                if (v && !gFFI.userModel.isLogin) {
-                  final res = await loginDialog();
-                  if (res != true) return;
-                }
-                await mainSetLocalBoolOption(
-                    kOptionAllowAskForNoteAtEndOfConnection, v);
-                final newValue = mainGetLocalBoolOptionSync(
-                    kOptionAllowAskForNoteAtEndOfConnection);
-                setState(() {
-                  _allowAskForNoteAtEndOfConnection = newValue;
-                });
-              },
-            ),
+//             SettingsTile.switchTile(
+//               title: Text(translate('note-at-conn-end-tip')),
+//               initialValue: _allowAskForNoteAtEndOfConnection,
+//               onToggle: (v) async {
+//                 if (v && !gFFI.userModel.isLogin) {
+//                   final res = await loginDialog();
+//                   if (res != true) return;
+//                 }
+//                 await mainSetLocalBoolOption(
+//                     kOptionAllowAskForNoteAtEndOfConnection, v);
+//                 final newValue = mainGetLocalBoolOptionSync(
+//                     kOptionAllowAskForNoteAtEndOfConnection);
+//                 setState(() {
+//                   _allowAskForNoteAtEndOfConnection = newValue;
+//                 });
+//               },
+//             ),
           if (!incomingOnly)
             SettingsTile.switchTile(
               title:
@@ -1034,11 +1034,11 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
               ),
             ],
           ),
-        if (isAndroid &&
-            !disabledSettings &&
-            !outgoingOnly &&
-            !hideSecuritySettings)
-          SettingsSection(title: Text('2FA'), tiles: tfaTiles),
+//         if (isAndroid &&
+//             !disabledSettings &&
+//             !outgoingOnly &&
+//             !hideSecuritySettings)
+//           SettingsSection(title: Text('2FA'), tiles: tfaTiles),
         if (isAndroid &&
             !disabledSettings &&
             !outgoingOnly &&

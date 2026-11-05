@@ -657,19 +657,19 @@ class _GeneralState extends State<_General> {
     }
 
     if (!bind.isDisableAccount()) {
-      children.add(_OptionCheckBox(
-        context,
-        'note-at-conn-end-tip',
-        kOptionAllowAskForNoteAtEndOfConnection,
-        isServer: false,
-        optSetter: (key, value) async {
-          if (value && !gFFI.userModel.isLogin) {
-            final res = await loginDialog();
-            if (res != true) return;
-          }
-          await mainSetLocalBoolOption(key, value);
-        },
-      ));
+//       children.add(_OptionCheckBox(
+//         context,
+//         'note-at-conn-end-tip',
+//         kOptionAllowAskForNoteAtEndOfConnection,
+//         isServer: false,
+//         optSetter: (key, value) async {
+//           if (value && !gFFI.userModel.isLogin) {
+//             final res = await loginDialog();
+//             if (res != true) return;
+//           }
+//           await mainSetLocalBoolOption(key, value);
+//         },
+//       ));
     }
     children.add(_OptionCheckBox(
       context,
@@ -1039,7 +1039,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               child: Column(children: [
                 permissions(context),
                 password(context),
-                _Card(title: '2FA', children: [tfa()]),
+//                 _Card(title: '2FA', children: [tfa()]),
                 if (!isChangeIdDisabled())
                   _Card(title: 'ID', children: [changeId()]),
                 more(context),

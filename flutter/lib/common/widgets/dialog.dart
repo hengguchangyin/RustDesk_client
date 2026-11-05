@@ -1588,17 +1588,17 @@ showAuditDialog(FFI ffi) async {
 }
 
 bool allowAskForNoteAtEndOfConnection(FFI? ffi, bool closedByControlling) {
-  if (ffi == null) {
+//   if (ffi == null) {
     return false;
-  }
-  return mainGetLocalBoolOptionSync(kOptionAllowAskForNoteAtEndOfConnection) &&
-      bind
-          .sessionGetAuditServerSync(sessionId: ffi.sessionId, typ: "conn")
-          .isNotEmpty &&
-      bind.sessionGetAuditGuid(sessionId: ffi.sessionId).isNotEmpty &&
-      bind.sessionGetLastAuditNote(sessionId: ffi.sessionId).isEmpty &&
-      (!closedByControlling ||
-          bind.willSessionCloseCloseSession(sessionId: ffi.sessionId));
+//   }
+//   return mainGetLocalBoolOptionSync(kOptionAllowAskForNoteAtEndOfConnection) &&
+//       bind
+//           .sessionGetAuditServerSync(sessionId: ffi.sessionId, typ: "conn")
+//           .isNotEmpty &&
+//       bind.sessionGetAuditGuid(sessionId: ffi.sessionId).isNotEmpty &&
+//       bind.sessionGetLastAuditNote(sessionId: ffi.sessionId).isEmpty &&
+//       (!closedByControlling ||
+//           bind.willSessionCloseCloseSession(sessionId: ffi.sessionId));
 }
 
 // return value: close canceled
