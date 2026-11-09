@@ -27,6 +27,19 @@ import '../../models/model.dart';
 import '../../models/platform_model.dart';
 import '../widgets/popup_menu.dart';
 
+String _localizeWindowsFolderName(String name, bool isWindows) {
+  if (!isWindows) return name;
+  const map = {
+    'Desktop': '桌面',
+    'Documents': '文档',
+    'Downloads': '下载',
+    'Music': '音乐',
+    'Pictures': '图片',
+    'Videos': '视频',
+  };
+  return map[name] ?? name;
+}
+
 /// status of location bar
 enum LocationStatus {
   /// normal bread crumb bar
@@ -1078,6 +1091,7 @@ class _FileManagerViewState extends State<FileManagerView> {
       BuildContext context, ScrollController scrollController) {
     final fd = controller.directory.value;
     final entries = fd.entries;
+    final isWindows = controller.options.value.isWindows;
     Rx<Entry?> rightClickEntry = Rx(null);
 
     return ListSearchActionListener(
@@ -1240,7 +1254,8 @@ class _FileManagerViewState extends State<FileManagerView> {
                                                         .labelColor),
                                               ),
                                         Expanded(
-                                            child: Text(entry.name.nonBreaking,
+                                            child: Text(entry.isFile ? entry.name.nonBreaking : _localizeWindowsFolderName(entry.name, isWindows).nonBreaking,
+//                                             child: Text(entry.name.nonBreaking,
                                                 style: TextStyle(
                                                     color: selectedItems.items
                                                             .contains(entry)
