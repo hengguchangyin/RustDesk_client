@@ -1091,7 +1091,6 @@ class _FileManagerViewState extends State<FileManagerView> {
       BuildContext context, ScrollController scrollController) {
     final fd = controller.directory.value;
     final entries = fd.entries;
-    final isWindows = controller.options.value.isWindows;
     Rx<Entry?> rightClickEntry = Rx(null);
 
     return ListSearchActionListener(
@@ -1139,6 +1138,7 @@ class _FileManagerViewState extends State<FileManagerView> {
             kDesktopFileTransferRowHeight);
       },
       child: Obx(() {
+        final isWindows = controller.options.value.isWindows;
         final entries = controller.directory.value.entries;
         final filteredEntries = _searchText.isNotEmpty
             ? entries.where((element) {
