@@ -248,9 +248,20 @@ class UserModel {
       throw RequestException(
           resp.statusCode, resp.reasonPhrase ?? 'Request failed');
     }
+//     final List<String> ops = [];
+//     for (final item in jsonDecode(resp.body)) {
+//       ops.add(item as String);
+//     }
+    final dynamic decoded = jsonDecode(resp.body);
+    if (decoded is! Iterable) {
+      debugPrint('queryOidcLoginOptions returned non-iterable: $decoded');
+      return [];
+    }
     final List<String> ops = [];
-    for (final item in jsonDecode(resp.body)) {
-      ops.add(item as String);
+    for (final item in decoded) {
+      if (item is String) {
+        ops.add(item);
+      }
     }
     for (final item in ops) {
       if (item.startsWith('common-oidc/')) {
