@@ -1294,6 +1294,20 @@ fn get_api_server_(api: String, custom: String) -> String {
             return format!("http://{}", s);
         }
     }
+    let rz = Config::get_rendezvous_server();
+        if !rz.is_empty() {
+        let s = crate::increase_port(&rz, -2);
+        if s == rz {
+            let s = if hbb_common::is_ipv6_str(&s) && !s.starts_with('[') {
+                format!("[{s}]")
+            } else {
+                s
+            };
+            return format!("http://{}:{}", s, config::RENDEZVOUS_PORT - 2);
+        } else {
+            return format!("http://{}", s);
+        }
+    }
     "".to_owned()
 }
 
