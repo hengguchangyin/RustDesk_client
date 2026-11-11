@@ -36,6 +36,10 @@ String _localizeWindowsFolderName(String name, bool isWindows) {
     'Music': '音乐',
     'Pictures': '图片',
     'Videos': '视频',
+    'Favorites': '收藏夹',
+    'Searches': '搜索',
+    'Links': '链接',
+    'Contacts': '联系人',
   };
   return map[name] ?? name;
 }
