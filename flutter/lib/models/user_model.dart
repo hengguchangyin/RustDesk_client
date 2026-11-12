@@ -23,7 +23,8 @@ class UserModel {
   // True when networkError carries a server-reported error rather than a
   // connectivity failure; netWorkErrorWidget hides the network tip then.
   final RxBool networkErrorFromServer = false.obs;
-  bool get isLogin => userName.isNotEmpty;
+//   bool get isLogin => userName.isNotEmpty;
+  bool get isLogin => bind.mainGetLocalOption(key: 'access_token').isNotEmpty;
   String get displayNameOrUserName =>
       displayName.value.trim().isEmpty ? userName.value : displayName.value;
   String get accountLabelWithHandle {
@@ -82,9 +83,18 @@ class UserModel {
       }
       refreshingUser = false;
       final status = response.statusCode;
+//       if (status == 401 || status == 400) {
+//         reset(resetOther: status == 401);
+//         return;
+//       }
       if (status == 401 || status == 400) {
-        reset(resetOther: status == 401);
-        return;
+        try {
+          final errData = json.decode(decode_http_response(response));
+          if (errData is Map && errData['error'] != null) {
+            reset(resetOther: status == 401);
+            return;
+          }
+        } catch (_) {}
       }
       final data = json.decode(decode_http_response(response));
       final error = data['error'];
