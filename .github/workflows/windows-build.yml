@@ -1,0 +1,284 @@
+# =====================================================================
+# Windows x64 专用打包工作流（fork 精简版）
+# 由原版 .github/workflows/flutter-build.yml 裁剪而来：
+#   - 只构建 Windows x64（Flutter UI 版），产出自解压安装 exe
+#   - 不依赖任何 secrets / 签名服务 / macOS / Android / iOS 任务
+#   - 触发方式：Actions 页面手动 Run workflow，或推送 v 开头的 tag
+# =====================================================================
+name: Build Windows x64
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+env:
+  RUST_VERSION: "1.75"
+  LLVM_VERSION: "15.0.6"
+  FLUTTER_VERSION: "3.24.5"
+  # vcpkg version: 2026.07.29（与 vcpkg.json baseline 对应，勿单独改动）
+  VCPKG_COMMIT_ID: "9e593bb18ea69cc5095e012465dcd675a822ed0d"
+  VERSION: "1.5.1"
+
+jobs:
+  # ---------- 第 1 步：在 Linux 上生成 flutter_rust_bridge 代码 ----------
+  generate-bridge:
+    runs-on: ubuntu-22.04
+    env:
+      CARGO_EXPAND_VERSION: "1.0.95"
+      FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          submodules: recursive
+
+      - name: Install prerequisites
+        run: |
+          sudo apt-get install ca-certificates -y
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang cmake curl gcc g++ git \
+            libclang-dev libgtk-3-dev llvm-dev \
+            nasm ninja-build pkg-config wget
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: x86_64-unknown-linux-gnu
+          components: "rustfmt"
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          prefix-key: bridge-ubuntu-22.04
+
+      - name: Cache Bridge
+        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c # v3
+        with:
+          path: /tmp/flutter_rust_bridge
+          key: bridge-3.22.3
+
+      - name: Install flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version: "3.22.3"
+          cache: true
+
+      - name: Install flutter rust bridge deps
+        shell: bash
+        run: |
+          cargo install cargo-expand --version ${{ env.CARGO_EXPAND_VERSION }} --locked
+          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid" --locked
+          # Default Flutter 3.22.3: extended_text 14 needs a newer Dart, so downgrade for resolution.
+          sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' flutter/pubspec.yaml
+          pushd flutter && flutter pub get && popd
+
+      - name: Run flutter rust bridge
+        run: |
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
+          cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
+
+      - name: Upload bridge artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bridge-artifact
+          path: |
+            ./src/bridge_generated.rs
+            ./src/bridge_generated.io.rs
+            ./flutter/lib/generated_bridge.dart
+            ./flutter/lib/generated_bridge.freezed.dart
+            ./flutter/macos/Runner/bridge_generated.h
+            ./flutter/ios/Runner/bridge_generated.h
+
+  # ---------- 第 2 步：构建置顶注入 DLL（WindowInjection.dll） ----------
+  build-topmost-window:
+    uses: ./.github/workflows/third-party-RustDeskTempTopMostWindow.yml
+    with:
+      upload-artifact: true
+      target: windows-2022
+      configuration: Release
+      platform: x64
+      target_version: Windows10
+
+  # ---------- 第 3 步：构建 Windows x64 主程序并打包成安装 exe ----------
+  build-windows-x64:
+    name: rustdesk-windows-x64
+    needs: [generate-bridge, build-topmost-window]
+    runs-on: windows-2022
+    steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Checkout source code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          submodules: recursive
+
+      - name: Restore bridge files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: bridge-artifact
+          path: ./
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
+        with:
+          version: ${{ env.LLVM_VERSION }}
+
+      - name: Install flutter
+        uses: subosito/flutter-action@2783a3f08e1baf891508463f8c6653c258246225 # v2.12.0
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          architecture: x64
+
+      # https://github.com/flutter/flutter/issues/155685
+      - name: Replace engine with rustdesk custom flutter engine
+        run: |
+          flutter doctor -v
+          flutter precache --windows
+          Invoke-WebRequest -Uri https://github.com/rustdesk/engine/releases/download/main/windows-x64-release.zip -OutFile windows-x64-release.zip
+          Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
+          mv -Force windows-x64-release/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
+
+      - name: Patch flutter
+        shell: bash
+        run: |
+          cp .github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff $(dirname $(dirname $(which flutter)))
+          cd $(dirname $(dirname $(which flutter)))
+          if [[ "3.24.5" == ${{ env.FLUTTER_VERSION }} ]]; then
+            git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
+          fi
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: x86_64-pc-windows-msvc
+          components: "rustfmt"
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          prefix-key: windows-2022
+
+      - name: Setup vcpkg with Github Actions binary cache
+        uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11
+        with:
+          vcpkgDirectory: C:\vcpkg
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          doNotCache: false
+
+      - name: Install vcpkg dependencies
+        env:
+          VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
+        run: |
+          if ! $VCPKG_ROOT/vcpkg \
+            install \
+            --triplet x64-windows-static \
+            --x-install-root="$VCPKG_ROOT/installed"; then
+            find "${VCPKG_ROOT}/" -name "*.log" | while read -r _1; do
+              echo "$_1:"
+              echo "======"
+              cat "$_1"
+              echo "======"
+              echo ""
+            done
+            exit 1
+          fi
+        shell: bash
+
+      - name: Build rustdesk
+        run: |
+          # Windows: build RustDesk
+          python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
+          mv ./flutter/build/windows/x64/runner/Release ./rustdesk
+
+          # Download usbmmidd_v2.zip and extract it to ./rustdesk
+          Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
+          Expand-Archive usbmmidd_v2.zip -DestinationPath .
+          Remove-Item -Path usbmmidd_v2\Win32 -Recurse
+          Remove-Item -Path "usbmmidd_v2\deviceinstaller64.exe", "usbmmidd_v2\deviceinstaller.exe", "usbmmidd_v2\usbmmidd.bat"
+          mv -Force .\usbmmidd_v2 ./rustdesk
+
+          # Download printer driver files and extract them to ./rustdesk
+          try {
+            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/rustdesk_printer_driver_v4-1.4.zip -OutFile rustdesk_printer_driver_v4-1.4.zip
+            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/printer_driver_adapter.zip -OutFile printer_driver_adapter.zip
+            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/sha256sums -OutFile sha256sums
+
+            $checksum_driver = (Select-String -Path .\sha256sums -Pattern '^([a-fA-F0-9]{64}) \*rustdesk_printer_driver_v4-1\.4\.zip$').Matches.Groups[1].Value
+            $downloadsum_driver = Get-FileHash -Path rustdesk_printer_driver_v4-1.4.zip -Algorithm SHA256
+            $checksum_adapter = (Select-String -Path .\sha256sums -Pattern '^([a-fA-F0-9]{64}) \*printer_driver_adapter\.zip$').Matches.Groups[1].Value
+            $downloadsum_adapter = Get-FileHash -Path printer_driver_adapter.zip -Algorithm SHA256
+            if ($checksum_driver -eq $downloadsum_driver.Hash -and $checksum_adapter -eq $downloadsum_adapter.Hash) {
+                Write-Output "rustdesk_printer_driver_v4-1.4, checksums match, extract the file."
+                Expand-Archive rustdesk_printer_driver_v4-1.4.zip -DestinationPath .
+                mkdir ./rustdesk/drivers
+                mv -Force .\rustdesk_printer_driver_v4-1.4 ./rustdesk/drivers/RustDeskPrinterDriver
+                Expand-Archive printer_driver_adapter.zip -DestinationPath .
+                mv -Force .\printer_driver_adapter.dll ./rustdesk
+            } elseif ($checksum_driver -ne $downloadsum_driver.Hash) {
+                Write-Output "rustdesk_printer_driver_v4-1.4, checksums do not match, ignore the file."
+            } else {
+                Write-Output "printer_driver_adapter.dll, checksums do not match, ignore the file."
+            }
+          } catch {
+              Write-Host "Ingore the printer driver error."
+          }
+
+      - name: find Runner.res
+        shell: bash
+        continue-on-error: true
+        run: |
+          runner_res=$(find . -name "Runner.res");
+          if [ "$runner_res" == "" ]; then
+            echo "Runner.res: not found";
+          else
+            echo "Runner.res: $runner_res";
+            cp $runner_res ./libs/portable/Runner.res;
+            ls -l ./libs/portable/Runner.res;
+          fi
+
+      - name: Download RustDeskTempTopMostWindow artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: topmostwindow-artifacts-x64
+          path: "./rustdesk"
+
+      - name: Build self-extracted executable
+        shell: bash
+        run: |
+          sed -i '/dpiAware/d' res/manifest.xml
+          pushd ./libs/portable
+          pip3 install -r requirements.txt
+          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+          popd
+          mkdir -p ./SignOutput
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-x64.exe
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rustdesk-${{ env.VERSION }}-x64-windows
+          path: ./SignOutput/rustdesk-*.exe
+          if-no-files-found: error
+
+      # 仅在推送 tag（如 1.5.1 / v1.5.1）时，把 exe 发布到该 tag 的 Release 页面
+      - name: Publish Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          prerelease: true
+          tag_name: ${{ github.ref_name }}
+          files: ./SignOutput/rustdesk-*.exe
